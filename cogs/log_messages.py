@@ -85,7 +85,7 @@ class MessageLog(commands.Cog):
 
         #Checking for message replay. ~Snoopie
         if before == message.content:
-            print('Message replay caught!' + '(' + message.author + ': ' + message.content + ")")
+            print('Message replay caught!' + '(' + message.author.display_name + ': ' + message.content + ")")
             return
 
         embed = embeds.message_edit_log_extended(message=message, before=before)
