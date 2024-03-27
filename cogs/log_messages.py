@@ -76,11 +76,17 @@ class MessageLog(commands.Cog):
         if not self.pre_checks(message):
             return
 
+        ##Assuming message is loaded into memory after this  ~Snoopie
         if payload.cached_message is None:
             message_object = await database.database_get_last_message(bot=self.bot, guild_id=payload.guild_id, channel_id=payload.channel_id, message_id=payload.message_id)
             before = message_object.content
         else:
             before = payload.cached_message.content
+
+        #Checking for message replay. ~Snoopie
+        if before == message.content:
+            print('Message replay caught!' + '(' + message.author + ': ' + message.content + ")")
+            return
 
         embed = embeds.message_edit_log_extended(message=message, before=before)
         await self.send_log(guild_id=payload.guild_id, log_type=log_type, embed=embed)
