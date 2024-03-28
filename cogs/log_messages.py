@@ -138,7 +138,7 @@ class MessageLog(commands.Cog):
         if message.guild is None:
             return
 
-        if message.type != discord.MessageType.default:
+        if message.type != discord.MessageType.default and message.type != discord.MessageType.reply:
             return
 
         if not message.channel:
