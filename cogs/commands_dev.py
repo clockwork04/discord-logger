@@ -12,7 +12,10 @@ class DevCommands(commands.Cog):
 
     @commands.command()
     async def sync(self, ctx: commands.Context, guilds: commands.Greedy[discord.Object], spec: typing.Optional[typing.Literal["~", "*", "^", "x"]] = None) -> None:
-        if ctx.author.id not in DEVELOPER_IDS:
+        #May it be my formatting, or whatever else but DEVELOPER IDs isn't being read correctly.
+        #Allowing this command to be ran by any guild owner if it includes this bot is dangerous, but the worst that can happen is we cannot run /setup.
+        #We'll.. cross that bridge if we need to. ~Snoopie
+        if (ctx.author != ctx.guild.owner and ctx.author.id not in DEVELOPER_IDS):
             return
 
         if not guilds:
@@ -32,9 +35,7 @@ class DevCommands(commands.Cog):
             else:
                 synced = await ctx.bot.tree.sync()
 
-            await ctx.send(
-                f"Synced {len(synced)} commands {'globally' if spec is None else 'to the current guild.'}"
-            )
+            await ctx.send(f"Synced {len(synced)} commands {'globally' if spec is None else 'to the current guild.'}")
             return
 
         ret = 0
@@ -61,7 +62,9 @@ class DevCommands(commands.Cog):
         # !sync id_1 id_2 -> syncs guilds with id 1 and 2
 
     async def execute_command_on_vps(self, command: str):
-        proc = await asyncio.create_subprocess_shell(
+        #I don't care how much security you think you have but RCE is bad, imagine if your account was hacked.. now it's much worse. ~Snoopie
+        pass
+        """ proc = await asyncio.create_subprocess_shell(
             command,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE)
@@ -75,7 +78,7 @@ class DevCommands(commands.Cog):
             content += f'\n\n**stderr**\n```{stderr.decode()}```'
 
         return content
-
+    
     @commands.command()
     async def git(self, ctx: commands.Context, command: str):
         if ctx.author.id not in DEVELOPER_IDS:
@@ -101,7 +104,7 @@ class DevCommands(commands.Cog):
         else:
             content = await self.execute_command_on_vps(f'systemctl {action} {service}')
             await ctx.send(content)
-            await ctx.message.delete()
+            await ctx.message.delete() """
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(DevCommands(bot))
