@@ -169,6 +169,17 @@ def message_delete_log_extended(message: discord.Message, moderator: discord.Use
 
     if moderator is not None:
         description.append(f'**Deleted by**: {moderator.mention}')
+    
+    if message.attachments:
+        try:
+            attachment0 = {
+                str(message.attachments[0].url),
+                str(message.attachments[0].filename),
+            }
+        except:
+            attachment0 = message.attachments
+        finally:
+            description.append(f'**Attachment**: {list(attachment0)[1]}')
 
     embed = create_embed(
         color=discord.Color.red(),

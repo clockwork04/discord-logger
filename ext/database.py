@@ -9,6 +9,11 @@ from ext.audit_log import recursive_object_to_dict
 log_database = MongoClient(MONGO_URI)
 
 def database_insert_message(message: discord.Message):
+    if message.attachments:
+        attachment0data = message.attachments[0].url + "//FILENAME//" + message.attachments[0].filename
+    else:
+        attachment0data = ""
+
     doc = {
         'message_id': str(message.id),
         'guild_id': str(message.guild.id),
@@ -19,6 +24,7 @@ def database_insert_message(message: discord.Message):
         'content': message.content,
         'edited_at': message.edited_at,
         'deleted': False,
+        'attachment0': str(attachment0data),
     }
 
     result = log_database[str(message.guild.id)][str(message.channel.id)].insert_one(doc)
@@ -49,6 +55,7 @@ async def database_get_last_message(bot: commands.Bot, guild_id: int, channel_id
         message_author = await bot.fetch_user(message_doc['author_id'])
 
     guild_object = bot.get_guild(guild_id)
+    attachment0data = str(message_doc.get('attachment0', ''))
     class Message:
         id = message_id
         author = message_author
@@ -58,5 +65,7 @@ async def database_get_last_message(bot: commands.Bot, guild_id: int, channel_id
         edited_at = message_doc.get('edited_at', None)
         content = message_doc.get('content', '')
         type = discord.MessageType.default
+        
+        attachments = list(attachment0data.split("//FILENAME//", 1))
 
     return Message
