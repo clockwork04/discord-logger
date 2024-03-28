@@ -6,6 +6,11 @@ from discord.ext import commands
 
 from ext import database, embeds, functions
 
+logger = logging.getLogger()
+logger.setLevel(logging.WARNING)
+
+discord_logger = logging.getLogger('discord')
+discord_logger.setLevel(logging.WARNING)
 
 class MessageLog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -65,7 +70,7 @@ class MessageLog(commands.Cog):
         database.database_delete_message(message)
 
     @commands.Cog.listener()
-    async def on_raw_message_edit(payload: discord.RawMessageUpdateEvent):
+    async def on_raw_message_edit(self, payload: discord.RawMessageUpdateEvent):
         if not payload.guild_id:
             return
 
@@ -90,12 +95,12 @@ class MessageLog(commands.Cog):
 
         #Checking for message replay. ~Snoopie
         if before == message.content:
-            logging.Logger.warning(msg='Message replay caught!' + '(' + message.author.display_name + ': ' + message.content + ")")
+            logging.Logger.warning(self=logger, msg='Message replay caught!' + '(' + message.author.display_name + ': ' + message.content + ")")
             return
         
         #Checking for empty edits. ~Snoopie
         if before == "":
-            logging.Logger.warning(msg=f"Empty edit detected! {message.author.display_name}: {message.content}")
+            logging.Logger.warning(self=logger, msg=f"Empty edit detected! {message.author.display_name}: {message.content}")
             return
 
         embed = embeds.message_edit_log_extended(message=message, before=before)
