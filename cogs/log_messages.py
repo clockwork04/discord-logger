@@ -1,4 +1,5 @@
 from datetime import datetime, timezone, timedelta
+import logging
 
 import discord
 from discord.ext import commands
@@ -26,7 +27,7 @@ class MessageLog(commands.Cog):
         if not self.pre_checks(message):
             return
 
-        database.database_insert_message(message)
+        await database.database_insert_message(message)
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: discord.RawMessageDeleteEvent):
@@ -39,10 +40,13 @@ class MessageLog(commands.Cog):
 
         timestamp = datetime.now(timezone.utc)
 
+        databaseMessage = False
         if payload.cached_message is None:
             message = await database.database_get_last_message(bot=self.bot, guild_id=payload.guild_id, channel_id=payload.channel_id, message_id=payload.message_id)
+            databaseMessage = True
         else:
             message = payload.cached_message
+            databaseMessage = False
 
         if not self.pre_checks(message):
             return
@@ -55,8 +59,9 @@ class MessageLog(commands.Cog):
         # ERROR: message.channel = None
         # Union[TextChannel, StageChannel, VoiceChannel, Thread, DMChannel, GroupChannel, PartialMessageable]
 
-        embed = embeds.message_delete_log_extended(message=message, moderator=moderator, timestamp=timestamp)
-        await self.send_log(guild_id=payload.guild_id, log_type=log_type, embed=embed)
+        #Embed Builder
+        embed = embeds.message_delete_log_extended(message, moderator, timestamp, databaseMessage)
+        await self.send_log(payload.guild_id, log_type, embed)
         database.database_delete_message(message)
 
     @commands.Cog.listener()
@@ -85,12 +90,17 @@ class MessageLog(commands.Cog):
 
         #Checking for message replay. ~Snoopie
         if before == message.content:
-            print('Message replay caught!' + '(' + message.author.display_name + ': ' + message.content + ")")
+            logging.Logger.warning(msg='Message replay caught!' + '(' + message.author.display_name + ': ' + message.content + ")")
+            return
+        
+        #Checking for empty edits. ~Snoopie
+        if before == "":
+            logging.Logger.warning(msg=f"Empty edit detected! {message.author.display_name}: {message.content}")
             return
 
         embed = embeds.message_edit_log_extended(message=message, before=before)
         await self.send_log(guild_id=payload.guild_id, log_type=log_type, embed=embed)
-        database.database_insert_message(message)
+        await database.database_insert_message(message)
 
     async def get_moderator(self, message: discord.Message):
         moderator = None
@@ -102,13 +112,19 @@ class MessageLog(commands.Cog):
                     break
         return moderator
 
-    async def send_log(self, guild_id: int, log_type: str, embed: discord.Embed):
+    async def send_log(self, guild_id: int, log_type: str, embed):
         channel_id = int(self.bot.guild_settings[guild_id][log_type]['channel_id'])
         channel = self.bot.get_channel(channel_id)
         if channel is None:
             self.bot.logger.error('%s Log channel with ID %s not found', self.bot.guild_settings[guild_id][log_type], channel_id)
+        if isinstance(embed, tuple):
+            if embed[1] is not False: 
+                await channel.send(embed=embed[0], file=embed[1])
+            else: 
+                await channel.send(embed=embed[0])
         else:
             await channel.send(embed=embed)
+            
 
     def pre_checks(self, message: discord.Message):
         if message.author.bot is True:

@@ -75,7 +75,7 @@ class DiscordBot(commands.Bot):
         for guild in self.guilds:
             await set_guild_invites(self, guild)
 
-        self.logger.critical('logged in as %s | %s', self.user.name, self.user.id)
+        self.logger.warning('logged in as %s | %s', self.user.name, self.user.id)
 
 bot = DiscordBot()
 

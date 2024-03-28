@@ -1,4 +1,6 @@
+import asyncio
 import discord
+import urllib.request
 from discord.ext import commands
 from pymongo import DESCENDING, MongoClient
 
@@ -8,9 +10,11 @@ from ext.audit_log import recursive_object_to_dict
 
 log_database = MongoClient(MONGO_URI)
 
-def database_insert_message(message: discord.Message):
+async def database_insert_message(message: discord.Message):
     if message.attachments:
-        attachment0data = message.attachments[0].url + "//FILENAME//" + message.attachments[0].filename
+        attachment = message.attachments[0]
+        attachment0data = attachment.url + "//FILENAME//" + attachment.filename
+        asyncio.create_task(attachmentCacher(attachment, message.id, attachment.filename))
     else:
         attachment0data = ""
 
@@ -32,6 +36,10 @@ def database_insert_message(message: discord.Message):
         pass
     else:
         pass # error logger
+
+async def attachmentCacher(attachment: discord.Attachment, message_id: int, filename: str):
+    cacheName = str(f'./AttachmentCache/{message_id}.{filename}')
+    await attachment.save(fp=cacheName, use_cached=False)
 
 def database_insert_audit_log_entry(entry: discord.AuditLogEntry):
     result = log_database[str(entry.guild.id)].audit_log.insert_one(recursive_object_to_dict(entry))
@@ -66,6 +74,6 @@ async def database_get_last_message(bot: commands.Bot, guild_id: int, channel_id
         content = message_doc.get('content', '')
         type = discord.MessageType.default
         
-        attachments = list(attachment0data.split("//FILENAME//", 1))
+        attachments = attachment0data.split("//FILENAME//", 1)
 
     return Message

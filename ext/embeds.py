@@ -1,3 +1,4 @@
+import os
 import discord
 from ext.functions import get_username
 
@@ -141,7 +142,8 @@ def message_edit_log_extended(message: discord.Message, before: str):
         ['Channel', f'{message.channel.mention}\n{message.channel.name}', True],
         ['Created At', f'<t:{int(message.created_at.timestamp())}:d>\n<t:{int(message.created_at.timestamp())}:t>', True],
         ['Original Message', before[:1024], False],
-        ['Edited Message', message.content[:1024], False]
+        ['Edited Message', message.content[:1024], False],
+        ['Message Link', message.jump_url, False]
     ]
 
     # '`not cached or logged`' if before is none
@@ -153,7 +155,7 @@ def message_edit_log_extended(message: discord.Message, before: str):
         timestamp=message.edited_at
     )
     return embed
-def message_delete_log_extended(message: discord.Message, moderator: discord.User, timestamp):
+def message_delete_log_extended(message: discord.Message, moderator: discord.User, timestamp, record: bool):
     description = [f'Message deleted in **#{discord.utils.escape_markdown(message.channel.name)}**']
     if hasattr(message.author, 'id'):
         author = f'{discord.utils.escape_markdown(message.author.display_name)} - {message.author.id}'
@@ -170,16 +172,22 @@ def message_delete_log_extended(message: discord.Message, moderator: discord.Use
     if moderator is not None:
         description.append(f'**Deleted by**: {moderator.mention}')
     
+    attachmentFile = False
+    attachmentPresent = False
     if message.attachments:
-        try:
-            attachment0 = {
+        if not record:
+            attachment0 = [
                 str(message.attachments[0].url),
-                str(message.attachments[0].filename),
-            }
-        except:
+                str(message.attachments[0].filename),]
+        else:
             attachment0 = message.attachments
-        finally:
-            description.append(f'**Attachment**: {list(attachment0)[1]}')
+        description.append(f'**Attachment Name**: {attachment0[1]}')
+        if os.path.isfile(f"./AttachmentCache/{message.id}.{attachment0[1]}") is False:
+            description.append(f'\n**Attachment not in cache.**')
+        else:
+            attachmentFile = discord.File(f"./AttachmentCache/{message.id}.{attachment0[1]}")
+            attachmentFilename = f"{message.id}.{attachment0[1]}"
+            attachmentPresent = True
 
     embed = create_embed(
         color=discord.Color.red(),
@@ -190,4 +198,5 @@ def message_delete_log_extended(message: discord.Message, moderator: discord.Use
         footer=f'Message ID: {message.id}',
         timestamp=timestamp
     )
-    return embed
+    if attachmentPresent: embed.set_image(url=f"attachment://{attachmentFilename}")
+    return embed, attachmentFile
