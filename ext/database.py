@@ -3,6 +3,7 @@ import discord
 import urllib.request
 from discord.ext import commands
 from pymongo import DESCENDING, MongoClient
+from PIL import Image
 
 from config.secrets import MONGO_URI
 from ext.audit_log import recursive_object_to_dict
@@ -10,6 +11,8 @@ from ext.audit_log import recursive_object_to_dict
 
 log_database = MongoClient(MONGO_URI)
 
+#This wasnt async when I found it, but because attachment.save is async.. it is now.
+#I'm sure I'll find out why it wasnt before soon enough x3 ~Snoopie
 async def database_insert_message(message: discord.Message):
     if message.attachments:
         attachment = message.attachments[0]
@@ -38,8 +41,15 @@ async def database_insert_message(message: discord.Message):
         pass # error logger
 
 async def attachmentCacher(attachment: discord.Attachment, message_id: int, filename: str):
+    #drop attachments larger than 25M ~Snoopie
+    if attachment.size > 25000000:
+        return
     cacheName = str(f'./AttachmentCache/{message_id}.{filename}')
     await attachment.save(fp=cacheName, use_cached=False)
+    #Downloaded? I hope so, lets compress it. ~Snoopie
+    if 'image' in attachment.content_type:
+        image = Image.open(cacheName)
+        image.save(cacheName, optimize=True, quality=10)
 
 def database_insert_audit_log_entry(entry: discord.AuditLogEntry):
     result = log_database[str(entry.guild.id)].audit_log.insert_one(recursive_object_to_dict(entry))
@@ -73,7 +83,7 @@ async def database_get_last_message(bot: commands.Bot, guild_id: int, channel_id
         edited_at = message_doc.get('edited_at', None)
         content = message_doc.get('content', '')
         type = discord.MessageType.default
-        
+        #this is really really bad, but better than my first idea of storing Base64 in the databse. ~Snoopie
         attachments = attachment0data.split("//FILENAME//", 1)
 
     return Message

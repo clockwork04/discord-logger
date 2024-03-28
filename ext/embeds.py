@@ -167,11 +167,12 @@ def message_delete_log_extended(message: discord.Message, moderator: discord.Use
         description.append('\n')
 
     if message.created_at is not None:
-        description.append(f'**Created at**: <t:{int(message.created_at.timestamp())}:F>\n')
+        description.append(f'**Created**: <t:{int(message.created_at.timestamp())}:F>\n')
 
     if moderator is not None:
         description.append(f'**Deleted by**: {moderator.mention}')
     
+    #Mmmm yes, attachment handling. ~Snoopie
     attachmentFile = False
     attachmentPresent = False
     if message.attachments:
@@ -189,12 +190,17 @@ def message_delete_log_extended(message: discord.Message, moderator: discord.Use
             attachmentFilename = f"{message.id}.{attachment0[1]}"
             attachmentPresent = True
 
+    if message.content == "":
+        deletedMessage = "<No text content>"
+    else:
+        deletedMessage = message.content[:1023]
+
     embed = create_embed(
         color=discord.Color.red(),
         author=author,
         author_icon=author_icon,
         description=description,
-        fields = [['Deleted Message', message.content[:1023], False]],
+        fields = [['Deleted Message', deletedMessage, False]],
         footer=f'Message ID: {message.id}',
         timestamp=timestamp
     )
