@@ -65,7 +65,7 @@ class MessageLog(commands.Cog):
         database.database_delete_message(message)
 
     @commands.Cog.listener()
-    async def on_raw_message_edit(self, payload: discord.RawMessageUpdateEvent):
+    async def on_raw_message_edit(payload: discord.RawMessageUpdateEvent):
         if not payload.guild_id:
             return
 
