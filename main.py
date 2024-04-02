@@ -10,8 +10,13 @@ import config
 from ext.functions import set_guild_invites
 
 
-logger = logging.getLogger()
-logger.setLevel(logging.WARNING)
+logger = logging.getLogger(name='WGEDLA')
+logger.setLevel(logging.INFO)
+
+fh = logging.FileHandler(filename='loggerlog.log')
+fh.setLevel(logging.INFO)
+fh.setFormatter((logging.Formatter('%(asctime)s %(levelname)-8s %(name)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')))
+logger.addHandler(fh)
 
 discord_logger = logging.getLogger('discord')
 discord_logger.setLevel(logging.WARNING)
@@ -46,8 +51,9 @@ class DiscordBot(commands.Bot):
                 pass
 
     async def setup_hook(self):
+        #for better logfile readability. ~Snoopie
+        logger.warning(msg='Logger is starting up!'),
         bot.remove_command('help')
-
         ignore_items = ['__pycache__']
         for item in os.listdir('cogs'):
             if item in ignore_items:

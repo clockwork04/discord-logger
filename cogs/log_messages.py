@@ -6,8 +6,7 @@ from discord.ext import commands
 
 from ext import database, embeds, functions
 
-logger = logging.getLogger()
-logger.setLevel(logging.WARNING)
+logger = logging.getLogger(name='WGEDLA')
 
 discord_logger = logging.getLogger('discord')
 discord_logger.setLevel(logging.WARNING)
@@ -93,14 +92,10 @@ class MessageLog(commands.Cog):
         else:
             before = payload.cached_message.content
 
-        #Checking for message replay. ~Snoopie
-        if before == message.content:
-            logging.Logger.warning(self=logger, msg='Message replay caught!' + '(' + message.author.display_name + ': ' + message.content + ")")
-            return
-        
-        #Checking for empty edits. ~Snoopie
-        if before == "":
-            logging.Logger.warning(self=logger, msg=f"Empty edit detected! {message.author.display_name}: {message.content}")
+        #Checking for message edit anomilies. ~Snoopie
+        #this used to be critical but in production this happens so terrifically often logging them all to standard output seems stupid. ~Snoopie
+        if (before == message.content) or (before == ""):
+            logger.warning(msg=f'Edit anomily detected! Incident Location: {message.guild.id}/{message.channel.id}/{message.id}')
             return
 
         embed = embeds.message_edit_log_extended(message=message, before=before)
