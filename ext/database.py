@@ -48,7 +48,7 @@ async def database_insert_message(message: discord.Message):
 async def attachmentCacher(attachment: discord.Attachment, message_id: int, filename: str):
     #drop attachments larger than 25M ~Snoopie
     if attachment.size > 25000000:
-        logger.warning(msg=f'Attachment download dropped! Limit Exceeded. ' + f'Filename: {str(f'./AttachmentCache/{message_id}.{filename}')} ' + f'Size: {int(attachment.size / 1048576)}MB ' + f'Type: {attachment.content_type}')
+        logger.warning(msg=f'Attachment download dropped! Limit Exceeded. ' + f'Filename: {message_id}.{attachment.filename} ' + f'Size: {int(attachment.size / 1048576)}MB ' + f'Type: {attachment.content_type}')
         return
     cacheName = str(f'./AttachmentCache/{message_id}.{filename}')
     await attachment.save(fp=cacheName, use_cached=False)
