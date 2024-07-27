@@ -4,6 +4,7 @@ import logging
 import discord
 from discord.ext import commands
 
+import config.settings
 from ext import database, embeds, functions
 
 logger = logging.getLogger(name='WGEDLA')
@@ -59,6 +60,10 @@ class MessageLog(commands.Cog):
             moderator = await self.get_moderator(message)
         else:
             moderator = None
+
+        #now, this might look insideous buuut, I can assure you this is just to negate PluralKit spam in WGE.
+        if moderator.id in config.settings.OPERATOR_WHITELIST_IDS and config.settings.NSA_MODE is False:
+           return
 
         # ERROR: message.channel = None
         # Union[TextChannel, StageChannel, VoiceChannel, Thread, DMChannel, GroupChannel, PartialMessageable]
@@ -127,6 +132,10 @@ class MessageLog(commands.Cog):
             
 
     def pre_checks(self, message: discord.Message):
+        #See, where I'm from (Java) we have an operator called "!" and it makes this much less stupid, so I apologize. ~Snoopie
+        if message.author.id in config.settings.USER_WHITELIST_IDS and config.settings.NSA_MODE is False:
+            return
+        
         if message.author.bot is True:
             return
 
