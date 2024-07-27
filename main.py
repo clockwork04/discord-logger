@@ -9,6 +9,8 @@ from discord.ext import commands
 import config
 from ext.functions import set_guild_invites
 
+#comeonnn who can resist ascii art? ~Snoopie
+brandingAArt = [f' _      ______________  __   ___ ', f'| | /| / / ___/ __/ _ \\/ /  / _ |', f'| |/ |/ / (_ / _// // / /__/ __ |', f'|__/|__/\\___/___/____/____/_/ |_|']
 
 logger = logging.getLogger(name='WGEDLA')
 logger.setLevel(logging.INFO)
@@ -51,8 +53,11 @@ class DiscordBot(commands.Bot):
                 pass
 
     async def setup_hook(self):
+        for string in brandingAArt:
+            logger.warning(msg=string)
+
         #for better logfile readability. ~Snoopie
-        logger.warning(msg='Logger is starting up!'),
+        logger.warning(msg='WGE Dedicated Logging Application is starting up!'),
         bot.remove_command('help')
         ignore_items = ['__pycache__']
         for item in os.listdir('cogs'):
