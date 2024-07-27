@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import discord
-import urllib.request
+from datetime import datetime
 from discord.ext import commands
 from pymongo import DESCENDING, MongoClient
 from PIL import Image
@@ -88,8 +88,8 @@ async def database_get_last_message(bot: commands.Bot, guild_id: int, channel_id
         author = message_author
         guild = guild_object
         channel = guild.get_channel(channel_id)
-        created_at = message_doc.get('created_at', None)
-        edited_at = message_doc.get('edited_at', None)
+        created_at = message_doc.get('created_at', datetime)
+        edited_at = message_doc.get('edited_at', datetime)
         content = message_doc.get('content', '')
         type = discord.MessageType.default
         #this is really really bad, but better than my first idea of storing Base64 in the databse. ~Snoopie

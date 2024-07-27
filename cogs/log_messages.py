@@ -43,8 +43,6 @@ class MessageLog(commands.Cog):
         if not functions.enabled_check(bot=self.bot, guild_id=payload.guild_id, log_type=log_type, channel_id=payload.channel_id):
             return
 
-        timestamp = datetime.now(timezone.utc)
-
         databaseMessage = False
         if payload.cached_message is None:
             message = await database.database_get_last_message(bot=self.bot, guild_id=payload.guild_id, channel_id=payload.channel_id, message_id=payload.message_id)
@@ -52,18 +50,26 @@ class MessageLog(commands.Cog):
         else:
             message = payload.cached_message
             databaseMessage = False
+        
+        timestamp = datetime.now(timezone.utc)
+        debugDelta = (timestamp.replace(tzinfo=None) - message.created_at.replace(tzinfo=None))
+        debugDelta = (debugDelta.seconds * 1000) + (debugDelta.microseconds / 1000)
+        if debugDelta < config.settings.DELETE_COOLDOWN:
+            logger.info(msg=f'Delay drop triggered! Delay:{debugDelta}ms User: {message.author} Location: {message.guild.id}/{message.channel.id}/{message.id}')
+            return
 
         if not self.pre_checks(message):
             return
 
         if hasattr(message.author, 'id'):
-            moderator = await self.get_moderator(message)
+            moderator = await self.get_moderator(message)   
         else:
             moderator = None
 
         #now, this might look insideous buuut, I can assure you this is just to negate PluralKit spam in WGE.
-        if moderator.id in config.settings.OPERATOR_WHITELIST_IDS and config.settings.NSA_MODE is False:
-           return
+        if moderator:
+            if str(moderator.id) in config.settings.OPERATOR_WHITELIST_IDS and config.settings.NSA_MODE is False:
+                return
 
         # ERROR: message.channel = None
         # Union[TextChannel, StageChannel, VoiceChannel, Thread, DMChannel, GroupChannel, PartialMessageable]
